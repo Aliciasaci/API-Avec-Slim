@@ -1,0 +1,6 @@
+[2022-01-25T16:03:01.319128+00:00] slim.log.DEBUG: GET / : pour voir le log [] []
+[2022-01-25T16:03:03.060872+00:00] slim.log.DEBUG: GET / : pour voir le log [] []
+[2022-01-25T16:04:12.147610+00:00] slim.log.DEBUG: GET / : pour voir le log [] []
+[2022-01-25T16:04:12.200890+00:00] slim.log.WARNING: this is a warning message [] []
+[2022-01-25T16:04:13.357781+00:00] slim.log.DEBUG: GET / : pour voir le log [] []
+[2022-01-25T16:04:13.418600+00:00] slim.log.WARNING: this is a warning message [] []
