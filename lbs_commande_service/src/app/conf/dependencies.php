@@ -1,25 +1,39 @@
 <?php
 
+
+use Monolog\Handler\StreamHandler;
+use Monolog\Logger;
+use Slim\Container;
+
 return [
-    'dbhost' => function(\Slim\Container $c){
+    'dbhost' => function(Container $c){
         $config = parse_ini_file($c->settings['dbfile']);
         return $config['host'];
     },
 
-    'logger'=> function(\Slim\Container $c){
-        $log = new \Monolog\Logger($c->settings['log.name']);
-        $log->pushHandler(new \Monolog\Handler\StreamHandler($c->settings['debug.log'],$c->settings['log.level']));
+    //Logger debug
+    'logger.debug' => function(Container $container) {
+        $log = new Logger($container->settings['debug.name']);                  //* Nom du log
+        $log->pushHandler(new StreamHandler($container->settings['debug.log'],     //* Nom du fichier du log
+                                            $container->settings['debug.level'])); //* Niveau de base du log
         return $log;
     },
 
-    // $container['dbfile'] = function ($container) {
-    //     $capsule = new \Illuminate\Database\Capsule\Manager;
-    //     $capsule->addConnection($container['settings']['dbfile']);
-    
-    //     $capsule->setAsGlobal();
-    //     $capsule->bootEloquent();
-    
-    //     return $capsule;
-    // },
+    // logger warn
+    'logger.warn' => function(Container $container) {
+        $log = new Logger($container->settings['warn.name']);                  
+        $log->pushHandler(new StreamHandler($container->settings['warn.log'],     
+                                            $container->settings['warn.level'])); 
+        return $log;
+    },
+
+     // logger error
+     'logger.error' => function(Container  $container) {
+        $log = new Logger($container->settings['error.name']);                  
+        $log->pushHandler(new StreamHandler($container->settings['error.log'],     
+                                            $container->settings['error.level'])); 
+        return $log;
+    },
+
 ];
 
