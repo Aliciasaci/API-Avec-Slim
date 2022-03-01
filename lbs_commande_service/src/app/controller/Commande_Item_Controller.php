@@ -33,9 +33,10 @@ class Commande_Item_Controller{
 
         
         $resp = Writer::json_output($resp,200);
-        $resp = $resp->withHeader('application-header', 'TD 1 _ Commandes');
         $resp = $resp->withHeader("Content-Type", "application/json;charset=utf-8");
         $resp->getBody()->write(json_encode($reponse));
         return $resp;
     }
+
+    //*rajouter un message dexception erreur si commande non trouvé
 }

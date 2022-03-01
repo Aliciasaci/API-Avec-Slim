@@ -8,6 +8,7 @@ use \Psr\Http\Message\ResponseInterface as Response;
 use lbs\command\app\models\Commande;
 use lbs\command\app\errors\Writer;
 use DateTime;
+use Ramsey\Uuid\Uuid;
 
 class CommandeController
 {
@@ -56,7 +57,7 @@ class CommandeController
             //                     ->firstOrFail();
 
             //* Modification TD4.2
-            $commande = Commande::select(['id', 'mail', 'nom', 'created_at', 'livraison', 'montant'])
+            $commande = Commande::select(['id', 'mail', 'nom', 'livraison', 'montant'])
                 ->where('id', '=', $id_commande)
                 ->firstOrFail();
 
@@ -134,6 +135,7 @@ class CommandeController
             // Récupérer la commande
             $commande = Commande::Select(['id', 'nom', 'mail', 'livraison'])->findOrFail($args['id']);
 
+            //Vas voir dans les cours de server web pour voir avc quoi remplacer this
             $commande->nom = filter_var($commande_data['nom_client'], FILTER_SANITIZE_STRING);
             $commande->mail = filter_var($commande_data['mail_client'], FILTER_SANITIZE_EMAIL);
             $commande->livraison = DateTime::createFromFormat(
@@ -154,5 +156,70 @@ class CommandeController
 
         return $resp;
     }
+
+    public function insertCommande(Request $req, Response $resp, array $args): Response
+    {
+
+        $clientError = $this->c->clientError;
+        //Les données reçues pour la nouvelle commande
+        $data_commande = $req->getParsedBody();
+
+        if (!isset($data_commande['nom_client'])) {
+            return $clientError($req, $resp, 400, "Missing 'nom_client");
+            // return Writer::json_error($resp, 400, "missing 'nom_client'");
+        };
+
+        if (!isset($data_commande['mail_client'])) {
+            return Writer::json_error($resp, 400, "missing 'mail_client'");
+        };
+
+        if (!isset($data_commande['livraison']['date'])) {
+            return Writer::json_error($resp, 400, "missing 'livraison(date)'");
+        };
+
+        if (!isset($data_commande['livraison']['heure'])) {
+            return Writer::json_error($resp, 400, "missing 'livraison(heure)'");
+        };
+
+
+        //Création du token unique et cryptographique
+        $token_commande = random_bytes(32);
+        $token_commande = bin2hex($token_commande);
+
+
+        $new_commande = new Commande();
+        $new_commande->id = Uuid::uuid4();
+        $new_commande->nom = filter_var($data_commande['nom_client'], FILTER_SANITIZE_STRING);
+        $new_commande->mail = filter_var($data_commande['mail_client'], FILTER_SANITIZE_EMAIL);
+        // $new_commande->livraison =  $data_commande['livraison']->format('Y-m-d H:i');  doesnt work !!!!!!!
+        $new_commande->livraison = DateTime::createFromFormat('Y-m-d H:i',$data_commande['livraison']['date'] . ' ' .$data_commande['livraison']['heure']);
+        $new_commande->montant = 0;
+        // $new_commande->status = Commande::CREATED;
+        $new_commande->token = $token_commande;
+        $new_commande->save();
+
+
+        // Récupération du path pour le location dans header
+        $path_commande = $this->c->router->pathFor(
+            'getCommande',
+            ['id' => $new_commande->id]
+        );
+
+        //Le retour
+        //   return writer::json_output ("'type' => 'ressource, 'commande'=>$commande",200) ->withHeader etc...
+
+        // // //Lien du retours
+        // // $commandeLink = $this->c->router->pathFor('commande',[id,...//id de commande)]).$commande_id;
+
+        // //avec json outpout ajouter le "collection" le location, la commande etc..
+
+        $resp = $resp->withStatus(201);
+        $resp = $resp->withHeader("Location", $path_commande);
+        $resp->getBody()->write(json_encode($new_commande));
+        return $resp;
+    }
 }
 // C:\Users\ASUS\Desktop\Étude\Slim\lbs_commande_service\src\controller\CommandesController.php
+
+
+//on ajoute le middlewear check qui est dans la classe token dans le dossier middlewear quand on reup les items, modifier une commande, payer une commande, get la commande.
