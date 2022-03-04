@@ -124,7 +124,7 @@ class CommandeController
         //L'id de la commande est passé en argument
         $id_commande = $args['id'];
         //récuper les paramètre passés en URI
-        $queries = $req->getQueryParams() ?? null;
+        $queries = $req->getQueryParams()['embed'] ?? null;
 
         try {
             // $commande = Commande::select(['id', 'nom', 'mail', 'montant'])
@@ -160,7 +160,7 @@ class CommandeController
 
             //*Ressources imbriquées TD4.3
             //GET /commandes/K9J67-4D6F5?embed=items
-            if ($queries['embed'] === 'items') {
+            if ($queries === 'items') {
                 $items = $commande->items()->select('id', 'libelle', 'tarif', 'quantite')->get();
                 $datas_resp["commande"]["items"] = $items;
             }
