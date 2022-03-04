@@ -1,5 +1,6 @@
 <?php
 
+//! Nettoyer le code !!!!!!!!!!!!!!!!!!!!!!
 namespace lbs\command\app\controller;
 
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -19,6 +20,68 @@ class CommandeController
         $this->c = $c;
     }
 
+    public function insertCommande(Request $req, Response $resp, array $args): Response
+    {
+
+        $clientError = $this->c->clientError;
+        //Les données reçues pour la nouvelle commande
+        $received_commande = $req->getParsedBody();
+
+        if (!isset($received_commande['nom_client'])) {
+            return $clientError($req, $resp, 400, "Missing 'nom_client");
+            // return Writer::json_error($resp, 400, "missing 'nom_client'");
+        };
+
+        if (!isset($received_commande['mail_client'])) {
+            return Writer::json_error($resp, 400, "missing 'mail_client'");
+        };
+
+        if (!isset($received_commande['livraison']['date'])) {
+            return Writer::json_error($resp, 400, "missing 'livraison(date)'");
+        };
+
+        if (!isset($received_commande['livraison']['heure'])) {
+            return Writer::json_error($resp, 400, "missing 'livraison(heure)'");
+        };
+
+    
+        //Création du token unique et cryptographique
+        $token_commande = random_bytes(32);
+        $token_commande = bin2hex($token_commande);
+
+
+        $new_commande = new Commande();
+        $new_commande->id = Uuid::uuid4();
+        $new_commande->nom = filter_var($received_commande['nom_client'], FILTER_SANITIZE_STRING);
+        $new_commande->mail = filter_var($received_commande['mail_client'], FILTER_SANITIZE_EMAIL);
+        $temp_livraison_date = new  DateTime($received_commande['livraison']['date'] . ' ' . $received_commande['livraison']['heure']);
+        $new_commande->livraison = $temp_livraison_date->format('Y-m-d H:i:s');
+        $new_commande->montant = 0;
+        // $new_commande->status = Commande::CREATED;
+        $new_commande->token = $token_commande;
+        $new_commande->save();
+
+
+        // Récupération du path pour le location dans header
+        $path_commande = $this->c->router->pathFor(
+            'getCommande',
+            ['id' => $new_commande->id]
+        );
+
+        //Construire la réponse : 
+        $response = [
+            "type" => "ressource",
+            "commande" =>$new_commande
+        ];
+         
+        //Le retour
+        $resp->getBody()->write(json_encode( $response));
+        return writer::json_output($resp, 201)->withHeader("location", $path_commande);
+
+        //!Voir avec l'exception à catch ici
+    }
+
+
     // Récuperer toutes les commandes
     public function getAllCommande(Request $req, Response $resp): Response
     {
@@ -32,14 +95,8 @@ class CommandeController
             "commandes" => $commandes
         ];
 
-        //Écriture des headers de retours
-        $resp = $resp->withStatus(200);
-        $resp = $resp->withHeader('application-header', 'TD 1 _ Commandes');
-        $resp = $resp->withHeader("Content-Type", "application/json;charset=utf-8");
-
         $resp->getBody()->write(json_encode($data_resp));
-
-        return $resp;
+        return writer::json_output($resp, 200);
     }
 
 
@@ -90,16 +147,9 @@ class CommandeController
                 $datas_resp["commande"]["items"] = $items;
             }
 
-            $resp = $resp->withStatus(200);
-            $resp = $resp->withHeader('application-header', 'TD 1 _ Commandes');
-            $resp = $resp->withHeader("Content-Type", "application/json;charset=utf-8");
-
-
             $resp->getBody()->write(json_encode($datas_resp));
-
-            return $resp;
+            return writer::json_output($resp, 200);
         } catch (ModelNotFoundException $e) {
-
             $clientError = $this->c->clientError;
             return $clientError($req, $resp, 404, "Commande not found");
         }
@@ -154,68 +204,6 @@ class CommandeController
             return Writer::json_error($resp, 500, $e->getMessage());
         }
 
-        return $resp;
-    }
-
-    public function insertCommande(Request $req, Response $resp, array $args): Response
-    {
-
-        $clientError = $this->c->clientError;
-        //Les données reçues pour la nouvelle commande
-        $data_commande = $req->getParsedBody();
-
-        if (!isset($data_commande['nom_client'])) {
-            return $clientError($req, $resp, 400, "Missing 'nom_client");
-            // return Writer::json_error($resp, 400, "missing 'nom_client'");
-        };
-
-        if (!isset($data_commande['mail_client'])) {
-            return Writer::json_error($resp, 400, "missing 'mail_client'");
-        };
-
-        if (!isset($data_commande['livraison']['date'])) {
-            return Writer::json_error($resp, 400, "missing 'livraison(date)'");
-        };
-
-        if (!isset($data_commande['livraison']['heure'])) {
-            return Writer::json_error($resp, 400, "missing 'livraison(heure)'");
-        };
-
-
-        //Création du token unique et cryptographique
-        $token_commande = random_bytes(32);
-        $token_commande = bin2hex($token_commande);
-
-
-        $new_commande = new Commande();
-        $new_commande->id = Uuid::uuid4();
-        $new_commande->nom = filter_var($data_commande['nom_client'], FILTER_SANITIZE_STRING);
-        $new_commande->mail = filter_var($data_commande['mail_client'], FILTER_SANITIZE_EMAIL);
-        // $new_commande->livraison =  $data_commande['livraison']->format('Y-m-d H:i');  doesnt work !!!!!!!
-        $new_commande->livraison = DateTime::createFromFormat('Y-m-d H:i',$data_commande['livraison']['date'] . ' ' .$data_commande['livraison']['heure']);
-        $new_commande->montant = 0;
-        // $new_commande->status = Commande::CREATED;
-        $new_commande->token = $token_commande;
-        $new_commande->save();
-
-
-        // Récupération du path pour le location dans header
-        $path_commande = $this->c->router->pathFor(
-            'getCommande',
-            ['id' => $new_commande->id]
-        );
-
-        //Le retour
-        //   return writer::json_output ("'type' => 'ressource, 'commande'=>$commande",200) ->withHeader etc...
-
-        // // //Lien du retours
-        // // $commandeLink = $this->c->router->pathFor('commande',[id,...//id de commande)]).$commande_id;
-
-        // //avec json outpout ajouter le "collection" le location, la commande etc..
-
-        $resp = $resp->withStatus(201);
-        $resp = $resp->withHeader("Location", $path_commande);
-        $resp->getBody()->write(json_encode($new_commande));
         return $resp;
     }
 }

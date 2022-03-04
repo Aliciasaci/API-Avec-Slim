@@ -53,3 +53,6 @@
 [2022-03-01T22:05:52.224566+00:00] lbs.log.ERROR: error | 500 | Call to a member function format() on array | /var/www/src/app/controller/CommandeController.phpline: 193 [] []
 [2022-03-01T22:07:44.659226+00:00] lbs.log.ERROR: error | 500 | Call to a member function format() on array | /var/www/src/app/controller/CommandeController.phpline: 193 [] []
 [2022-03-01T22:07:58.849601+00:00] lbs.log.ERROR: error | 500 | Call to a member function format() on bool | /var/www/src/app/controller/CommandeController.phpline: 211 [] []
+[2022-03-03T19:14:09.388245+00:00] lbs.log.ERROR: GET http://api.commande.local:19080/ : malformed uri [] []
+[2022-03-03T19:14:14.601212+00:00] lbs.log.ERROR: GET http://api.commande.local:19080/favicon.ico : malformed uri [] []
+[2022-03-03T19:21:41.690285+00:00] lbs.log.ERROR: error | 500 | Call to a member function format() on array | /var/www/src/app/controller/CommandeController.phpline: 56 [] []

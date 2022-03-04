@@ -10,14 +10,8 @@ class Middleware{
         $this->c = $c;
     }
 
-    public function putIntoJson($rq, $rs, $next){
+    public function putIntoJson($rq, $rs, callable $next){
         $rs = $rs->withHeader("Content-Type", "application/json;charset=utf-8");
         return $next($rq,$rs);
     }
-
-    // public function location($rq, $rs, $next){
-    //     $rs = $rs->withHeader("location", );
-    //     return $next($rq,$rs);
-    // }
-
 }
