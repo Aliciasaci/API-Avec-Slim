@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use \Psr\Http\Message\ServerRequestInterface as Request;
 use \Psr\Http\Message\ResponseInterface as Response;
 use lbs\command\app\models\Commande;
+use lbs\command\app\models\Item;
 use lbs\command\app\errors\Writer;
 use DateTime;
 use Ramsey\Uuid\Uuid;
@@ -49,15 +50,31 @@ class CommandeController
         $token_commande = random_bytes(32);
         $token_commande = bin2hex($token_commande);
 
-
+        //créer la commande et son id
         $new_commande = new Commande();
-        $new_commande->id = Uuid::uuid4();
+        $new_commande_id = Uuid::uuid4();
+        $new_commande->id =  $new_commande_id;
+
+        
+        // //Récuperer le tableau des items
+        $items = $received_commande['items'];
+        $montant_total = 0;
+        foreach ($items as $item){
+            $new_item = new Item();
+            $new_item->uri = $item['uri'];
+            $new_item->quantite = $item['q'];
+            $new_item->libelle = $item['libelle'];
+            $new_item->tarif = $item['tarif'];
+            $new_item->command_id = $new_commande_id;
+            $montant_total += $item['tarif'];
+            $new_item->save();
+        }
+
         $new_commande->nom = filter_var($received_commande['nom_client'], FILTER_SANITIZE_STRING);
         $new_commande->mail = filter_var($received_commande['mail_client'], FILTER_SANITIZE_EMAIL);
         $temp_livraison_date = new  DateTime($received_commande['livraison']['date'] . ' ' . $received_commande['livraison']['heure']);
         $new_commande->livraison = $temp_livraison_date->format('Y-m-d H:i:s');
-        $new_commande->montant = 0;
-        // $new_commande->status = Commande::CREATED;
+        $new_commande->montant =  $montant_total;
         $new_commande->token = $token_commande;
         $new_commande->save();
 
@@ -71,11 +88,12 @@ class CommandeController
         //Construire la réponse : 
         $response = [
             "type" => "ressource",
-            "commande" =>$new_commande
+            "commande" =>$new_commande,
         ];
          
         //Le retour
         $resp->getBody()->write(json_encode( $response));
+        $resp->withHeader('X-lbs-token',$new_commande->token );
         return writer::json_output($resp, 201)->withHeader("location", $path_commande);
 
         //!Voir avec l'exception à catch ici
@@ -207,7 +225,6 @@ class CommandeController
         return $resp;
     }
 }
-// C:\Users\ASUS\Desktop\Étude\Slim\lbs_commande_service\src\controller\CommandesController.php
 
 
 //on ajoute le middlewear check qui est dans la classe token dans le dossier middlewear quand on reup les items, modifier une commande, payer une commande, get la commande.

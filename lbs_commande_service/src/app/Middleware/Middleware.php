@@ -14,4 +14,5 @@ class Middleware{
         $rs = $rs->withHeader("Content-Type", "application/json;charset=utf-8");
         return $next($rq,$rs);
     }
+
 }
