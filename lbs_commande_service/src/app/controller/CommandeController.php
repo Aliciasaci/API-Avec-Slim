@@ -24,80 +24,90 @@ class CommandeController
     public function insertCommande(Request $req, Response $resp, array $args): Response
     {
 
-        $clientError = $this->c->clientError;
+        // $clientError = $this->c->clientError;
         //Les données reçues pour la nouvelle commande
         $received_commande = $req->getParsedBody();
 
-        if (!isset($received_commande['nom_client'])) {
-            return $clientError($req, $resp, 400, "Missing 'nom_client");
-            // return Writer::json_error($resp, 400, "missing 'nom_client'");
-        };
+        //! comment traiter le message de retours dans ce cas ? un json_error ou pas ? 
+        //! quelle est l'erreur adéquate dans ce cas ? 403 ? 
+        //! dois-je customiser les messages d'erreur ?
+        if ($req->getAttribute('has_errors')) {
 
-        if (!isset($received_commande['mail_client'])) {
-            return Writer::json_error($resp, 400, "missing 'mail_client'");
-        };
+            $errors = $req->getAttribute('errors');
 
-        if (!isset($received_commande['livraison']['date'])) {
-            return Writer::json_error($resp, 400, "missing 'livraison(date)'");
-        };
+            if (isset($errors['nom_client'])) {
+                ($this->c->get('logger.error'))->error("error",$errors['nom_client']);
+                return Writer::json_error($resp, 403, "Le champ 'nom_client' ne doit pas être vide et doit contenir que des lettres");
+            }
+            if (isset($errors['mail_client'])) {
+                ($this->c->get('logger.error'))->error("error",$errors['mail_client']);
+                return Writer::json_error($resp, 403, "Le champ 'mail_client' ne doit pas être vide et doit être valide");
+            }
+            if (isset($errors['livraison.date'])) {    //une vérification à faire sur l'heure ? 
+                ($this->c->get('logger.error'))->error("error",$errors['livraison.date']);
+                return Writer::json_error($resp, 403, "La date de livraison ne doit pas être inférieur à la date d'aujourd'hui et doit être le format d-m-Y");
+            }
+            if (isset($errors['items'])) {
+                ($this->c->get('logger.error'))->error("error",$errors['items']);
+                return Writer::json_error($resp, 403, "le champ items ne doit pas être vide et toutes les informations doivent être valide");
+            }
+        } else {
 
-        if (!isset($received_commande['livraison']['heure'])) {
-            return Writer::json_error($resp, 400, "missing 'livraison(heure)'");
-        };
+            //Création du token unique et cryptographique
+            $token_commande = random_bytes(32);
+            $token_commande = bin2hex($token_commande);
 
-    
-        //Création du token unique et cryptographique
-        $token_commande = random_bytes(32);
-        $token_commande = bin2hex($token_commande);
+            //créer la commande et son id
+            $new_commande = new Commande();
+            $new_commande_id = Uuid::uuid4();
+            $new_commande->id =  $new_commande_id;
 
-        //créer la commande et son id
-        $new_commande = new Commande();
-        $new_commande_id = Uuid::uuid4();
-        $new_commande->id =  $new_commande_id;
 
-        
-        // //Récuperer le tableau des items
-        $items = $received_commande['items'];
-        $montant_total = 0;
-        foreach ($items as $item){
-            $new_item = new Item();
-            $new_item->uri = $item['uri'];
-            $new_item->quantite = $item['q'];
-            $new_item->libelle = $item['libelle'];
-            $new_item->tarif = $item['tarif'];
-            $new_item->command_id = $new_commande_id;
-            $montant_total += $item['tarif'];
-            $new_item->save();
+            //Récuperer le tableau des items 
+            $items = $received_commande['items'];
+            $montant_total = 0;
+            foreach ($items as $item) {
+                $new_item = new Item();
+                $new_item->uri = $item['uri'];
+                $new_item->quantite = $item['q'];
+                $new_item->libelle = $item['libelle'];
+                $new_item->tarif = $item['tarif'];
+                $new_item->command_id = $new_commande_id;
+                $montant_total += $item['tarif'];
+                $new_item->save();
+            }
+
+            $new_commande->nom = filter_var($received_commande['nom_client'], FILTER_SANITIZE_STRING);
+            $new_commande->mail = filter_var($received_commande['mail_client'], FILTER_SANITIZE_EMAIL);
+            $temp_livraison_date = new  DateTime($received_commande['livraison']['date'] . ' ' . $received_commande['livraison']['heure']);
+            $new_commande->livraison = $temp_livraison_date->format('Y-m-d H:i:s');
+            $new_commande->montant =  $montant_total;
+            $new_commande->token = $token_commande;
+            $new_commande->save();
+
+
+            // Récupération du path pour le location dans header
+            $path_commande = $this->c->router->pathFor(
+                'getCommande',
+                ['id' => $new_commande->id]
+            );
+
+            //Construire la réponse : 
+            $response = [
+                "type" => "ressource",
+                "commande" => $new_commande,
+            ];
+
+            //Le retour
+            $resp->getBody()->write(json_encode($response));
+            $resp->withHeader('X-lbs-token', $new_commande->token);
+            return writer::json_output($resp, 201)->withHeader("location", $path_commande);
         }
-
-        $new_commande->nom = filter_var($received_commande['nom_client'], FILTER_SANITIZE_STRING);
-        $new_commande->mail = filter_var($received_commande['mail_client'], FILTER_SANITIZE_EMAIL);
-        $temp_livraison_date = new  DateTime($received_commande['livraison']['date'] . ' ' . $received_commande['livraison']['heure']);
-        $new_commande->livraison = $temp_livraison_date->format('Y-m-d H:i:s');
-        $new_commande->montant =  $montant_total;
-        $new_commande->token = $token_commande;
-        $new_commande->save();
-
-
-        // Récupération du path pour le location dans header
-        $path_commande = $this->c->router->pathFor(
-            'getCommande',
-            ['id' => $new_commande->id]
-        );
-
-        //Construire la réponse : 
-        $response = [
-            "type" => "ressource",
-            "commande" =>$new_commande,
-        ];
-         
-        //Le retour
-        $resp->getBody()->write(json_encode( $response));
-        $resp->withHeader('X-lbs-token',$new_commande->token );
-        return writer::json_output($resp, 201)->withHeader("location", $path_commande);
 
         //!Voir avec l'exception à catch ici
     }
+
+
 
 
     // Récuperer toutes les commandes
@@ -116,6 +126,8 @@ class CommandeController
         $resp->getBody()->write(json_encode($data_resp));
         return writer::json_output($resp, 200);
     }
+
+
 
 
     //Récuperer une seule commande par id
@@ -172,6 +184,8 @@ class CommandeController
             return $clientError($req, $resp, 404, "Commande not found");
         }
     }
+
+
 
     //Modifier une commande
     public function putCommande(Request $req, Response $resp, array $args): Response

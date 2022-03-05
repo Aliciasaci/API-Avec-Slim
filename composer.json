@@ -1,5 +1,6 @@
 {
     "require": {
-        "illuminate/database": "~5.1"
+        "illuminate/database": "~5.1",
+        "davidepastore/slim-validation": "^0.5.1"
     }
 }
