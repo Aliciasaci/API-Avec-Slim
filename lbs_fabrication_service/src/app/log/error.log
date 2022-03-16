@@ -1,1 +1,8 @@
 [2022-03-08T16:43:31.925169+00:00] lbs.log.ERROR: POST http://api.fabrication.local:19680/commandes/ : bad method - GET wanted [] []
+[2022-03-11T09:20:09.388471+00:00] lbs.log.ERROR: error | 500 | Too few arguments to function Illuminate\Support\Collection::get(), 0 passed in /var/www/src/app/controller/CommandeController.php on line 36 and at least 1 expected | /var/www/src/vendor/illuminate/collections/Collection.phpline: 419 [] []
+[2022-03-11T09:25:16.286981+00:00] lbs.log.ERROR: error | 500 | Too few arguments to function Illuminate\Support\Collection::get(), 0 passed in /var/www/src/app/controller/CommandeController.php on line 36 and at least 1 expected | /var/www/src/vendor/illuminate/collections/Collection.phpline: 419 [] []
+[2022-03-11T09:40:21.939616+00:00] lbs.log.ERROR: error | 500 | Too few arguments to function Illuminate\Support\Collection::get(), 0 passed in /var/www/src/app/controller/CommandeController.php on line 36 and at least 1 expected | /var/www/src/vendor/illuminate/collections/Collection.phpline: 419 [] []
+[2022-03-11T09:54:04.371711+00:00] lbs.log.ERROR: error | 500 | syntax error, unexpected '"commandes"' (T_CONSTANT_ENCAPSED_STRING), expecting ']' | /var/www/src/app/controller/CommandeController.phpline: 64 [] []
+[2022-03-11T10:45:59.144872+00:00] lbs.log.ERROR: error | 500 | Call to a member function withAttribute() on string | /var/www/src/app/controller/CommandeController.phpline: 78 [] []
+[2022-03-11T10:47:28.496794+00:00] lbs.log.ERROR: error | 500 | Call to a member function withAttribute() on string | /var/www/src/app/controller/CommandeController.phpline: 78 [] []
+[2022-03-15T13:07:38.601652+00:00] lbs.log.ERROR: bad ressource : http://api.fabrication.local:19680/commandes/size=1759 [] []

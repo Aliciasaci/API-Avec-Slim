@@ -1,8 +1,7 @@
 <?php
 
-//! Nettoyer le code !!!!!!!!!!!!!!!!!!!!!!
+//! Nettoyer le code !!!!
 namespace lbs\command\app\controller;
-
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use \Psr\Http\Message\ServerRequestInterface as Request;
 use \Psr\Http\Message\ResponseInterface as Response;
@@ -11,6 +10,8 @@ use lbs\command\app\models\Item;
 use lbs\command\app\errors\Writer;
 use DateTime;
 use Ramsey\Uuid\Uuid;
+
+
 
 class CommandeController
 {
@@ -113,7 +114,6 @@ class CommandeController
     // Récuperer toutes les commandes
     public function getAllCommande(Request $req, Response $resp): Response
     {
-
         $commandes = Commande::select(['id', 'nom', 'mail', 'montant'])->get();
 
         // Construction des donnés à retourner dans le corps de la réponse
@@ -129,13 +129,9 @@ class CommandeController
 
 
 
-
-    //Récuperer une seule commande par id
     public function getCommande(Request $req, Response $resp, array $args): Response
     {
-        //L'id de la commande est passé en argument
         $id_commande = $args['id'];
-        //récuper les paramètre passés en URI
         $queries = $req->getQueryParams()['embed'] ?? null;
 
         try {
@@ -241,4 +237,4 @@ class CommandeController
 }
 
 
-//on ajoute le middlewear check qui est dans la classe token dans le dossier middlewear quand on reup les items, modifier une commande, payer une commande, get la commande.
+

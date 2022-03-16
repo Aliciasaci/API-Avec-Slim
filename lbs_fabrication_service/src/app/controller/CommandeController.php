@@ -20,7 +20,38 @@ class CommandeController
     // Récuperer toutes les commandes
     public function getAllCommande(Request $req, Response $resp): Response
     {
-        $commandes = Commande::select(['id', 'nom', 'montant', 'created_at', 'status'])->orderBy('livraison', 'DESC')->get();
+
+        //! vérifier que c'est des nuémrique
+        $query_filtrage = $req->getQueryParams()['s'] ?? null;
+        $query_page = $req->getQueryParams()['page'] ?? 1;
+        $query_size = $req->getQueryParams()['size'] ?? 10;
+
+
+        //le filtrage 
+        if ($query_filtrage) {
+            $commandes = Commande::select(['id', 'nom', 'montant', 'created_at', 'status'])->where('status', '=', $query_filtrage)->orderBy('livraison', 'DESC')->get();
+            $count = count($commandes);
+        } else {
+            $commandes = Commande::select(['id', 'nom', 'montant', 'created_at', 'status'])->get();
+            $count = count($commandes);
+        }
+
+        //la pagination et lien des pages
+        $nb_page = $count/$query_size;
+        if ($query_page) {
+            if ($query_page < 0) {
+                $commandes = $commandes->take($query_size);
+                $size = count($commandes);
+            }elseif($query_page > $nb_page){                
+                $skip_value = ($nb_page - 1)* $query_size;
+                $commandes = $commandes->skip($skip_value)->take($query_size);
+                $size = count($commandes);
+            }else {
+                $skip_value = ($query_page - 1) * $query_size;
+                $commandes = $commandes->skip($skip_value)->take($query_size);
+                $size = count($commandes);
+            }
+        }
 
         $commande_response = [];
         $commande = [];
@@ -35,15 +66,19 @@ class CommandeController
             $commande["links"] =  $commandePath;
             array_push($commande_response, $commande);
         }
-        
+
         $data_resp = [
             "type" => "collection",
-            "count" => count($commandes),
+            "count" => $count,
+            "size" => $size,
+            "page" => $query_page,
             "commandes" => $commande_response
         ];
 
         $resp->getBody()->write(json_encode($data_resp));
         return writer::json_output($resp, 200);
+
+        //! reste à faire le first et last des pages
     }
 
 
