@@ -2,15 +2,17 @@
 
 namespace lbs\authentification\app\controller;
 
-use Firebase\JWT\JWT;
-use Firebase\JWT\ExpiredException;
-use Firebase\JWT\SignatureInvalidException;
-
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use lbs\authentification\app\models\User;
 use lbs\authentification\app\output\Writer;
 use \Psr\Http\Message\ServerRequestInterface as Request;
 use \Psr\Http\Message\ResponseInterface as Response;
+
+use Firebase\JWT\JWT;
+use Firebase\JWT\ExpiredException;
+use Firebase\JWT\SignatureInvalidException;
+use Firebase\JWT\Key;
+use Firebase\JWT\BeforeValidException;
 
 
 class AuthentificationController
@@ -53,24 +55,24 @@ class AuthentificationController
         }
 
         //   Le serveur vérifie les credentials, génère un access token et un refresh token et les retourne au client
-        // $secret = $this->c->settings['secret'];
-        // $token = JWT::encode(['iss' => 'http://api.authentification.local/auth',
-        //     'aud' => 'http://api.backoffice.local',
-        //     'iat' => time(),
-        //     'exp' => time() + (12 * 30 * 24 * 3600),
-        //     'upr' => [
-        //         'email' => $user->email,
-        //         'username' => $user->username,
-        //         'level' => $user->level
-        //     ]],
-        //     $secret, 'HS512');
+        $secret = $this->c->settings['secret'];
+        $token = JWT::encode(['iss' => 'http://api.authentification.local/auth',
+            'aud' => 'http://api.backoffice.local',
+            'iat' => time(),
+            'exp' => time() + (12 * 30 * 24 * 3600),
+            'upr' => [
+                'email' => $user->email,
+                'username' => $user->username,
+                'level' => $user->level
+            ]],
+            $secret, 'HS512');
 
-        // $user->refresh_token = bin2hex(random_bytes(32));
-        // $user->save();
-        // $data = [
-        //     'access-token' => $token,
-        //     'refresh-token' => $user->refresh_token
-        // ];
+        $user->refresh_token = bin2hex(random_bytes(32));
+        $user->save();
+        $data = [
+            'access-token' => $token,
+            'refresh-token' => $user->refresh_token
+        ];
 
         // return Writer::json_output($rs, 200, $data);
         $rs->getBody()->write("Succeded");
@@ -78,4 +80,32 @@ class AuthentificationController
 
     }
 
+    public function decodeToken(Request $rq, Response $rs, $args): Response {
+
+        try {
+            $header = $rq->getHeader('Authorization')[0] ;
+            $tokenstring = sscanf($header, "Bearer %s")[0] ;
+            $token = JWT::decode($tokenstring, new Key($secret,'HS512'));
+
+           } catch (ExpiredException $e) {
+            return Writer::json_error($rs, 401, 'Token expiré');
+            //utiliser le refresh token pour générer un nv access token.
+
+           } catch (SignatureInvalidException $e) {
+            return Writer::json_error($rs, 401, 'signature invalide');
+
+           } catch (BeforeValidException $e) {
+            return Writer::json_error($rs, 401, 'Erreur authentification');
+
+           } catch (\UnexpectedValueException $e) { 
+            return Writer::json_error($rs, 401, 'Erreur authentification');
+           }
+           
+    }
+
 }
+
+
+
+//mettre des select lors de saisie de données.
+//metter des alias pour pas exposer les donénes de la base de donnée.
