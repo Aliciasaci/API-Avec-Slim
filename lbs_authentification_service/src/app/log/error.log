@@ -15,3 +15,8 @@
 [2022-03-17T16:49:51.251155+00:00] lbs.log.ERROR: GET http://api.authentification.local:19090/favicon.ico : malformed uri [] []
 [2022-03-17T16:53:36.800756+00:00] lbs.log.ERROR: GET http://api.authentification.local:19090/auth : bad method - POST wanted [] []
 [2022-03-17T16:53:38.061848+00:00] lbs.log.ERROR: GET http://api.authentification.local:19090/favicon.ico : malformed uri [] []
+[2022-03-18T10:32:18.181149+00:00] lbs.log.ERROR: error | 500 | Class 'Firebase\JWT\JWT' not found | /var/www/src/app/controller/AuthentificationController.phpline: 59 [] []
+[2022-03-18T10:33:03.866122+00:00] lbs.log.ERROR: error | 500 | Class 'Firebase\JWT\JWT' not found | /var/www/src/app/controller/AuthentificationController.phpline: 59 [] []
+[2022-03-18T10:42:47.675555+00:00] lbs.log.ERROR: GET http://api.authentification.local:19090/acess : malformed uri [] []
+[2022-03-18T10:43:06.349811+00:00] lbs.log.ERROR: error | 500 | Return value of lbs\authentification\app\controller\AuthentificationController::checkToken() must implement interface Psr\Http\Message\ResponseInterface, none returned | /var/www/src/app/controller/AuthentificationController.phpline: 110 [] []
+[2022-03-18T10:43:17.714732+00:00] lbs.log.ERROR: error | 500 | Return value of lbs\authentification\app\controller\AuthentificationController::checkToken() must implement interface Psr\Http\Message\ResponseInterface, none returned | /var/www/src/app/controller/AuthentificationController.phpline: 110 [] []

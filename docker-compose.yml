@@ -81,6 +81,59 @@ services:
       - lbs.net
     depends_on:
       - mysql.users
+  
+
+  api.catalogue:
+    image: directus/directus:latest
+    ports:
+      - 19055:8055
+    volumes:
+      - ./lbs_catalogue_service/uploads:/directus/uploads
+      - ./lbs_catalogue_service/extensions:/directus/extensions
+    networks:
+      - lbs.net
+    depends_on:
+      - catalogue.data
+    environment:
+      KEY: '255d861b-5ea1-5996-9aa3-922530ec40b1'
+      SECRET: '6116487b-cda1-52c2-b5b5-c8022c45e263'
+
+      DB_CLIENT: 'pg'
+      DB_HOST: 'catalogue.data'
+      DB_PORT: '5432'
+      DB_DATABASE: 'catalogue'
+      DB_USER: 'catalogue'
+      DB_PASSWORD: 'catalogue'
+
+      CACHE_ENABLED: 'false'
+      ADMIN_EMAIL: 'admin@catalogue.net'
+      ADMIN_PASSWORD: 'catalogue'
+
+  
+  # service api.suivi.fabrication : api backoffice pour le suivi de fabrication
+  #  commandes
+  #
+  api.backoffice:
+    image: 'canals/php:latest'
+    environment:
+      - VHOST_HOSTNAME=api.backoffice.local
+      - VHOST_DOCROOT=/var/www/pub
+    ports:
+      - '20080:80'
+      - '20043:443'
+    volumes:
+      - './lbs_backoffice_service/pub:/var/www/pub'
+      - './lbs_backoffice_service/src:/var/www/src'
+      - './lbs_backoffice_service/log:/var/log/app'
+    working_dir: /var/www/src
+    networks:
+      lbs.net:
+        aliases:
+          - api.backoffice.local
+    depends_on:
+      - mysql.commande
+      - mysql.users
+
 
 
   # service sql pour le stockage des commandes -
@@ -100,6 +153,7 @@ services:
     volumes:
       - './lbs_commande_service/sql:/var/sql'
 
+
   # service sql pour le stockage des users -
   # utilisé par l'api  users et l'api suivi de fabrication
   mysql.users:
@@ -116,6 +170,18 @@ services:
       - lbs.net
     volumes:
       - './lbs_authentification_service/sql:/var/sql'
+  
+
+  catalogue.data:
+    image: postgis/postgis:13-master
+    volumes:
+      - ./lbs_catalogue_service/data/database:/var/lib/postgresql/data
+    networks:
+      - lbs.net
+    environment:
+      POSTGRES_USER: 'catalogue'
+      POSTGRES_PASSWORD: 'catalogue'
+      POSTGRES_DB: 'catalogue'
 
 
 
@@ -128,3 +194,17 @@ services:
       - '8080:8080'
     networks:
       - lbs.net
+
+
+
+
+
+###########################################################
+#
+#   Service catalogue, réalisé avec le CMS Headless Directus
+#   Service SQL géré par postgres
+#
+###########################################################
+
+
+

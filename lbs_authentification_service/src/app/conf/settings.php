@@ -19,5 +19,7 @@ return [
         'error.name' => 'lbs.log',               //Nom du log    
         'error.log' => __DIR__ . '/../log/error.log',  //* Nom du fichier du log    
         'error.level' => \Monolog\Logger::ERROR,  
+
+        'secret' => 'b5a533c6d0ae5707cd1c0b82e51d33e3785d3381d041a468b51a6e7363415c57'
     ]
 ];

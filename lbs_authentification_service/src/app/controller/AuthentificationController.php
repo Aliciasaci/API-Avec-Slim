@@ -54,7 +54,7 @@ class AuthentificationController
             return Writer::json_error($rs, 401, 'Erreur authentification');
         }
 
-        //   Le serveur vérifie les credentials, génère un access token et un refresh token et les retourne au client
+        //Le serveur vérifie les credentials, génère un access token et un refresh token et les retourne au client
         $secret = $this->c->settings['secret'];
         $token = JWT::encode(['iss' => 'http://api.authentification.local/auth',
             'aud' => 'http://api.backoffice.local',
@@ -74,18 +74,26 @@ class AuthentificationController
             'refresh-token' => $user->refresh_token
         ];
 
-        // return Writer::json_output($rs, 200, $data);
-        $rs->getBody()->write("Succeded");
+        $rs->getBody()->write(json_encode($data));
         return writer::json_output($rs, 200);
-
     }
 
-    public function decodeToken(Request $rq, Response $rs, $args): Response {
+    public function checkToken(Request $rq, Response $rs, $args): Response {
 
+        $secret = $this->c->settings['secret'];
         try {
             $header = $rq->getHeader('Authorization')[0] ;
             $tokenstring = sscanf($header, "Bearer %s")[0] ;
             $token = JWT::decode($tokenstring, new Key($secret,'HS512'));
+
+            $data = [
+                'user_mail' => $token->upr->email,
+                'user_username' => $token->upr->username,
+                'user_level' => $token->upr->level,
+            ];
+
+            $rs->getBody()->write(json_encode($data));
+            return writer::json_output($rs, 200);
 
            } catch (ExpiredException $e) {
             return Writer::json_error($rs, 401, 'Token expiré');
