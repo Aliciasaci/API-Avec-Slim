@@ -175,7 +175,7 @@ services:
   catalogue.data:
     image: postgis/postgis:13-master
     volumes:
-      - ./lbs_catalogue_service/data/database:/var/lib/postgresql/data
+      - ./lbs_catalogue_service/data/database:/var/lib/postgresql/database
     networks:
       - lbs.net
     environment:

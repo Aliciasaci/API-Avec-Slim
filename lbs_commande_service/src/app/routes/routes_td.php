@@ -11,13 +11,12 @@ use \DavidePastore\Slim\Validation\Validation as Validation ;
 
 $validators = CommandeValidator::create_validators();
 
-//!peu-être mettre le middleware json à l'objet app directement ?
 //Route pour retourner le contenu d'une commande
 $app->get('/commandes/{id}[/]',CommandeController::class. ':getCommande')->setName('getCommande')->add(middleware::class. ':putIntoJson')->add(Token::class. ':check');
 
 
 //Route pour retourner le contenu de toutes les commandes
-$app->get('/commandes[/]',CommandeController::class. ':getAllCommande')->setName('getAllCommande')->add(middleware::class. ':putIntoJson')->add(Token::class. ':check');
+$app->get('/commandes[/]',CommandeController::class. ':getAllCommande')->setName('getAllCommande')->add(middleware::class. ':putIntoJson');
 
 
 //Route pour modifier le contenu d'une commande

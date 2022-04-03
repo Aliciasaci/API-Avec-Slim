@@ -6,7 +6,7 @@ return [
     'settings' => [
         'displayErrorDetails' => true,
 
-        'dbfile' => __DIR__ . '/fabrication.db.conf.ini.dist',
+        'dbfile' => __DIR__ . '/command.db.conf.ini.dist',
 
         'debug.name' => 'lbs.log',
         'debug.log' => __DIR__ . '/../log/debug.log',
